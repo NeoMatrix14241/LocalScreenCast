@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test - Broadcaster</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: monospace; background: #1a1a1a; color: #0f0; padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        h1 { margin-bottom: 20px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .panel { background: #000; border: 2px solid #0f0; padding: 15px; border-radius: 5px; }
+        .video-box { background: #111; border: 2px solid #333; padding: 10px; border-radius: 5px; margin: 10px 0; }
+        video { width: 100%; height: auto; background: #000; border: 1px solid #333; max-height: 300px; }
+        button { background: #0f0; color: #000; border: none; padding: 8px 15px; margin: 5px 5px 5px 0; cursor: pointer; font-family: monospace; font-weight: bold; }
+        button:hover { background: #0d0; }
+        button:disabled { background: #666; cursor: not-allowed; }
+        .log { background: #111; border: 1px solid #333; padding: 10px; margin: 10px 0; height: 250px; overflow-y: auto; font-size: 11px; }
+        .success { color: #0f0; }
+        .error { color: #f00; }
+        .info { color: #0ff; }
+        .status { padding: 10px; margin: 10px 0; border-left: 3px solid; font-weight: bold; }
+        .status.ok { background: #001000; border-color: #0f0; color: #0f0; }
+        .status.error { background: #100000; border-color: #f00; color: #f00; }
+        .status.info { background: #000810; border-color: #0ff; color: #0ff; }
+        input { padding: 5px; background: #111; color: #0f0; border: 1px solid #333; font-family: monospace; }
+        label { display: block; margin-top: 10px; margin-bottom: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎬 Test - Broadcaster Mode</h1>
+        
+        <div class="grid">
+            <div class="panel">
+                <h2>📡 Connection & Capture</h2>
+                <div id="statusBroadcaster" class="status info">Ready</div>
+                
+                <button onclick="testBrowserSupport()">1️⃣ Check Browser Support</button>
+                <button onclick="testDisplayMedia()">2️⃣ Test Screen Capture</button>
+                <button onclick="testAudioCapture()">3️⃣ Test Audio Capture</button>
+                <button onclick="testWebSocket()">4️⃣ Test WebSocket</button>
+                <button onclick="testFullBroadcast()" style="background: #f0a; margin-top: 10px;">▶️ Full Broadcast Test</button>
+                <button onclick="stopTest()" disabled id="stopBtn" style="background: #f00;">⏹️ Stop</button>
+
+                <label>Room ID:</label>
+                <input type="text" id="roomId" value="test" style="width: 100%;">
+
+                <div id="bcLog" class="log"></div>
+            </div>
+
+            <div class="panel">
+                <h2>📹 Local Preview</h2>
+                <div id="statusPreview" class="status info">No stream</div>
+                <div class="video-box">
+                    <video id="localVideo" autoplay playsinline muted style="background: #000;"></video>
+                </div>
+                <button onclick="checkVideoState()">Check Video State</button>
+                
+                <h3 style="margin-top: 10px;">Video Info</h3>
+                <div id="videoState" style="background: #111; padding: 10px; border: 1px solid #333; font-size: 10px; white-space: pre-wrap; max-height: 150px; overflow-y: auto;">Ready...</div>
+
+                <div id="videoLog" class="log"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Ensure navigator.mediaDevices exists
+        if (!navigator.mediaDevices) {
+            console.error('❌ navigator.mediaDevices is undefined!');
+            document.body.innerHTML = '<h1 style="color:red">ERROR: Browser does not support Media Devices API</h1><p>This usually means:<ul><li>Page not served over HTTPS (or localhost)</li><li>Browser permissions blocked</li><li>Very old browser version</li></ul><p>Try accessing via <code>http://localhost:3000</code> instead of an IP address.</p>';
+        }
+
+        const bcLog = document.getElementById('bcLog');
+        const videoLog = document.getElementById('videoLog');
+        const localVideo = document.getElementById('localVideo');
+        const roomIdInput = document.getElementById('roomId');
+        const statusBroadcaster = document.getElementById('statusBroadcaster');
+        const statusPreview = document.getElementById('statusPreview');
+        const videoState = document.getElementById('videoState');
+        const stopBtn = document.getElementById('stopBtn');
+
+        let ws;
+        let mediaStream;
+        let peerConnections = new Map();
+
+        function bcLog_add(msg, type = 'info') {
+            const c = type === 'error' ? '#f00' : type === 'success' ? '#0f0' : '#0ff';
+            const el = document.createElement('div');
+            el.style.color = c;
+            el.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            bcLog.appendChild(el);
+            bcLog.scrollTop = bcLog.scrollHeight;
+            console.log(`[BC] ${msg}`);
+        }
+
+        function videoLog_add(msg, type = 'info') {
+            const c = type === 'error' ? '#f00' : type === 'success' ? '#0f0' : '#0ff';
+            const el = document.createElement('div');
+            el.style.color = c;
+            el.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            videoLog.appendChild(el);
+            videoLog.scrollTop = videoLog.scrollHeight;
+        }
+
+        function updateBCStatus(msg, ok = false) {
+            statusBroadcaster.className = 'status ' + (ok ? 'ok' : 'error');
+            statusBroadcaster.textContent = msg;
+        }
+
+        function updatePreviewStatus(msg, ok = false) {
+            statusPreview.className = 'status ' + (ok ? 'ok' : 'info');
+            statusPreview.textContent = msg;
+        }
+
+        // 1. Test Browser Support
+        async function testBrowserSupport() {
+            bcLog_add('=== Testing Browser Support ===', 'info');
+            
+            const features = {
+                'WebRTC (RTCPeerConnection)': !!window.RTCPeerConnection,
+                'WebSocket': !!window.WebSocket,
+                'getUserMedia': !!navigator.mediaDevices?.getUserMedia,
+                'getDisplayMedia': !!navigator.mediaDevices?.getDisplayMedia,
+                'MediaStream': !!window.MediaStream,
+            };
+
+            let allOk = true;
+            for (const [feature, supported] of Object.entries(features)) {
+                const icon = supported ? '✓' : '✗';
+                const type = supported ? 'success' : 'error';
+                bcLog_add(`${icon} ${feature}`, type);
+                if (!supported) allOk = false;
+            }
+
+            updateBCStatus(allOk ? 'Browser OK ✓' : 'Missing features ✗', allOk);
+
+            // List devices
+            try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const cameras = devices.filter(d => d.kind === 'videoinput').length;
+                const mics = devices.filter(d => d.kind === 'audioinput').length;
+                bcLog_add(`Devices: ${cameras} cameras, ${mics} microphones`, 'success');
+            } catch (e) {
+                bcLog_add('Error enumerating devices: ' + e.message, 'error');
+            }
+        }
+
+        // 2. Test Display Media (Screen Capture)
+        async function testDisplayMedia() {
+            try {
+                bcLog_add('Requesting screen capture...', 'info');
+                updateBCStatus('Waiting for permission...', false);
+
+                const stream = await navigator.mediaDevices.getDisplayMedia({
+                    video: {
+                        cursor: 'always'
+                    },
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: true
+                    }
+                });
+
+                bcLog_add('✓ Screen capture granted!', 'success');
+                bcLog_add(`  Tracks: ${stream.getTracks().map(t => t.kind).join(', ')}`, 'success');
+
+                mediaStream = stream;
+                updateBCStatus('Stream captured ✓', true);
+                updatePreviewStatus('Preview ready ✓', true);
+                localVideo.srcObject = stream;
+
+                // Log track details
+                stream.getTracks().forEach((track, idx) => {
+                    videoLog_add(`Track ${idx}: ${track.kind}`, 'success');
+                    videoLog_add(`  enabled: ${track.enabled}`, 'info');
+                    videoLog_add(`  readyState: ${track.readyState}`, 'info');
+                });
+
+                // Handle stream end
+                stream.getTracks().forEach(track => {
+                    track.onended = () => {
+                        bcLog_add(`⚠️  ${track.kind} track ended`, 'error');
+                        stopTest();
+                    };
+                });
+
+                stopBtn.disabled = false;
+
+            } catch (error) {
+                bcLog_add(`✗ Error: ${error.name}`, 'error');
+                bcLog_add(`  Message: ${error.message}`, 'error');
+                updateBCStatus(`Error: ${error.name}`, false);
+            }
+        }
+
+        // 3. Test Audio Only
+        async function testAudioCapture() {
+            try {
+                bcLog_add('Requesting microphone...', 'info');
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: true
+                    }
+                });
+                bcLog_add('✓ Microphone access granted!', 'success');
+                stream.getTracks().forEach(t => t.stop());
+            } catch (error) {
+                bcLog_add(`✗ Microphone error: ${error.message}`, 'error');
+            }
+        }
+
+        // 4. Test WebSocket
+        async function testWebSocket() {
+            try {
+                bcLog_add('Connecting to WebSocket...', 'info');
+                const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                ws = new WebSocket(`${protocol}//${window.location.host}`);
+
+                ws.onopen = () => {
+                    bcLog_add('✓ WebSocket connected!', 'success');
+                    bcLog_add(`  URL: ${ws.url}`, 'info');
+                    updateBCStatus('WebSocket OK ✓', true);
+                };
+
+                ws.onerror = (e) => {
+                    bcLog_add('✗ WebSocket error', 'error');
+                    updateBCStatus('WebSocket error ✗', false);
+                };
+
+                ws.onclose = () => {
+                    bcLog_add('WebSocket closed', 'info');
+                };
+
+            } catch (error) {
+                bcLog_add(`✗ Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Full broadcast test
+        async function testFullBroadcast() {
+            try {
+                bcLog_add('=== Starting Full Broadcast Test ===', 'info');
+
+                const roomId = roomIdInput.value.trim();
+                if (!roomId) {
+                    bcLog_add('✗ No room ID', 'error');
+                    return;
+                }
+
+                // Step 1: Get display media
+                bcLog_add('Step 1: Capturing screen...', 'info');
+                mediaStream = await navigator.mediaDevices.getDisplayMedia({
+                    video: { cursor: 'always' },
+                    audio: { echoCancellation: true }
+                });
+                bcLog_add(`✓ Screen captured: ${mediaStream.getTracks().length} tracks`, 'success');
+                localVideo.srcObject = mediaStream;
+                updatePreviewStatus('Broadcasting preview ✓', true);
+
+                // Step 2: Connect WebSocket
+                bcLog_add('Step 2: Connecting to server...', 'info');
+                const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                ws = new WebSocket(`${protocol}//${window.location.host}`);
+
+                ws.onopen = () => {
+                    bcLog_add('✓ Connected to server', 'success');
+
+                    // Step 3: Join room
+                    bcLog_add('Step 3: Joining room...', 'info');
+                    ws.send(JSON.stringify({
+                        type: 'join',
+                        roomId: roomId,
+                        role: 'broadcaster',
+                        clientId: 'test-bc-' + Date.now()
+                    }));
+                    bcLog_add('✓ Joined room: ' + roomId, 'success');
+                    updateBCStatus('Broadcasting ✓', true);
+                };
+
+                ws.onmessage = (e) => {
+                    const data = JSON.parse(e.data);
+                    bcLog_add(`← ${data.type}`, 'info');
+                };
+
+                ws.onerror = () => {
+                    bcLog_add('✗ WebSocket error', 'error');
+                };
+
+                stopBtn.disabled = false;
+
+            } catch (error) {
+                bcLog_add(`✗ Error: ${error.name}: ${error.message}`, 'error');
+                updateBCStatus(`Error: ${error.name}`, false);
+            }
+        }
+
+        // Stop test
+        function stopTest() {
+            if (mediaStream) {
+                mediaStream.getTracks().forEach(t => t.stop());
+                mediaStream = null;
+            }
+            if (ws) {
+                ws.close();
+                ws = null;
+            }
+            localVideo.srcObject = null;
+            bcLog_add('Stopped', 'info');
+            updateBCStatus('Stopped', false);
+            updatePreviewStatus('Stopped', false);
+            stopBtn.disabled = true;
+        }
+
+        // Check video state
+        function checkVideoState() {
+            const v = localVideo;
+            let info = `Video Element State:\n`;
+            info += `readyState: ${v.readyState} (0=uninitialized, 1=metadata, 2=current, 3=future, 4=enough)\n`;
+            info += `networkState: ${v.networkState}\n`;
+            info += `paused: ${v.paused}\n`;
+            info += `ended: ${v.ended}\n`;
+            info += `videoWidth: ${v.videoWidth}\n`;
+            info += `videoHeight: ${v.videoHeight}\n`;
+            info += `duration: ${v.duration}\n`;
+
+            if (mediaStream) {
+                info += `\nMediaStream:\n`;
+                info += `active: ${mediaStream.active}\n`;
+                info += `id: ${mediaStream.id}\n`;
+                info += `tracks: ${mediaStream.getTracks().length}\n`;
+                mediaStream.getTracks().forEach((t, i) => {
+                    info += `  [${i}] ${t.kind}: ${t.enabled ? 'ON' : 'OFF'} (${t.readyState})\n`;
+                });
+            }
+
+            videoState.textContent = info;
+        }
+    </script>
+</body>
+</html>
+    <style>
+        body {
+            font-family: monospace;
+            background: #1a1a1a;
+            color: #0f0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #000;
+            border: 2px solid #0f0;
+            padding: 20px;
+            border-radius: 5px;
+        }
+        h1 { color: #0f0; margin-bottom: 20px; }
+        .status { margin: 10px 0; }
+        .ok { color: #0f0; }
+        .error { color: #f00; }
+        .info { color: #0ff; }
+        button {
+            background: #0f0;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            margin: 10px 5px 10px 0;
+            cursor: pointer;
+            font-family: monospace;
+            border-radius: 3px;
+        }
+        button:hover { background: #0d0; }
+        .test-results {
+            background: #111;
+            border: 1px solid #333;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 3px;
+        }
+        code { background: #111; padding: 2px 6px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Server Status & Debug</h1>
+        
+        <div class="test-results">
+            <div class="status"><span class="info">▶ Checking Server Connection...</span></div>
+            <div id="wsStatus" class="status"><span class="info">Connecting to WebSocket...</span></div>
+            <div id="browserInfo" class="status"></div>
+            <div id="mediaInfo" class="status"></div>
+            <div id="networkInfo" class="status"></div>
+        </div>
+
+        <h3>Quick Tests</h3>
+        <button onclick="testWebSocket()">Test WebSocket</button>
+        <button onclick="testScreenCapture()">Test Screen Capture</button>
+        <button onclick="testAudioCapture()">Test Audio Capture</button>
+        <button onclick="testCamera()">Test Camera</button>
+        <button onclick="refreshPage()">Refresh Page</button>
+
+        <h3>System Info</h3>
+        <div id="systemInfo" class="test-results"></div>
+
+        <h3>Logs</h3>
+        <div id="logs" class="test-results" style="height: 300px; overflow-y: auto;"></div>
+    </div>
+
+    <script>
+        const logsDiv = document.getElementById('logs');
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const color = type === 'error' ? '#f00' : type === 'success' ? '#0f0' : '#0ff';
+            const entry = document.createElement('div');
+            entry.style.color = color;
+            entry.textContent = `[${timestamp}] ${message}`;
+            logsDiv.appendChild(entry);
+            logsDiv.scrollTop = logsDiv.scrollHeight;
+        }
+
+        // Display browser info
+        function displayBrowserInfo() {
+            document.getElementById('browserInfo').innerHTML = 
+                `<span class="ok">✓ Browser:</span> ${navigator.userAgent.substring(0, 60)}...`;
+        }
+
+        // Check media device support
+        async function checkMediaDevices() {
+            try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const cameras = devices.filter(d => d.kind === 'videoinput').length;
+                const mics = devices.filter(d => d.kind === 'audioinput').length;
+                const speakers = devices.filter(d => d.kind === 'audiooutput').length;
+                
+                const info = `<span class="ok">✓ Media:</span> ${cameras} cameras, ${mics} mics, ${speakers} speakers`;
+                document.getElementById('mediaInfo').innerHTML = info;
+                log(`Media devices: ${cameras} cameras, ${mics} mics, ${speakers} speakers`, 'success');
+            } catch (e) {
+                log('Error checking media devices: ' + e.message, 'error');
+            }
+        }
+
+        // Display network info
+        function displayNetworkInfo() {
+            const url = new URL(window.location);
+            document.getElementById('networkInfo').innerHTML = 
+                `<span class="ok">✓ Server:</span> ${url.hostname}:${url.port}`;
+        }
+
+        // Display system info
+        function displaySystemInfo() {
+            const info = `
+Platform: ${navigator.platform}
+Screen: ${window.screen.width}x${window.screen.height}
+WebRTC: ${!!window.RTCPeerConnection ? '✓' : '✗'}
+WebSocket: ${!!window.WebSocket ? '✓' : '✗'}
+getUserMedia: ${!!navigator.mediaDevices?.getUserMedia ? '✓' : '✗'}
+getDisplayMedia: ${!!navigator.mediaDevices?.getDisplayMedia ? '✓' : '✗'}
+            `.trim();
+            
+            document.getElementById('systemInfo').innerHTML = '<pre>' + info + '</pre>';
+        }
+
+        // Test WebSocket
+        function testWebSocket() {
+            log('Testing WebSocket connection...', 'info');
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const ws = new WebSocket(`${protocol}//${window.location.host}`);
+            
+            ws.onopen = () => {
+                log('✓ WebSocket connected!', 'success');
+                document.getElementById('wsStatus').innerHTML = 
+                    `<span class="ok">✓ WebSocket:</span> Connected`;
+                ws.send(JSON.stringify({type: 'test'}));
+                setTimeout(() => ws.close(), 1000);
+            };
+            
+            ws.onerror = (e) => {
+                log('✗ WebSocket error: ' + e, 'error');
+                document.getElementById('wsStatus').innerHTML = 
+                    `<span class="error">✗ WebSocket:</span> Connection failed`;
+            };
+        }
+
+        // Test screen capture
+        async function testScreenCapture() {
+            try {
+                log('Requesting screen capture...', 'info');
+                const stream = await navigator.mediaDevices.getDisplayMedia({
+                    video: { cursor: 'always' },
+                    audio: { echoCancellation: true }
+                });
+                log('✓ Screen capture success! ' + stream.getTracks().length + ' tracks', 'success');
+                stream.getTracks().forEach(t => t.stop());
+            } catch (e) {
+                log('✗ Screen capture error: ' + e.message, 'error');
+            }
+        }
+
+        // Test audio capture
+        async function testAudioCapture() {
+            try {
+                log('Requesting microphone...', 'info');
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    audio: { echoCancellation: true }
+                });
+                log('✓ Audio capture success!', 'success');
+                stream.getTracks().forEach(t => t.stop());
+            } catch (e) {
+                log('✗ Audio capture error: ' + e.message, 'error');
+            }
+        }
+
+        // Test camera
+        async function testCamera() {
+            try {
+                log('Requesting camera...', 'info');
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { width: 640, height: 480 }
+                });
+                log('✓ Camera capture success!', 'success');
+                stream.getTracks().forEach(t => t.stop());
+            } catch (e) {
+                log('✗ Camera capture error: ' + e.message, 'error');
+            }
+        }
+
+        function refreshPage() {
+            location.reload();
+        }
+
+        // Initialize on load
+        window.addEventListener('load', () => {
+            log('Page loaded, running diagnostics...', 'info');
+            displayBrowserInfo();
+            checkMediaDevices();
+            displayNetworkInfo();
+            displaySystemInfo();
+            testWebSocket();
+        });
+    </script>
+</body>
+</html>
