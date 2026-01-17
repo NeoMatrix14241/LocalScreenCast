@@ -11,8 +11,7 @@
     "dev": "concurrently \"node server.js\" \"node turn-server.js\"",
     "server": "node server.js",
     "turn": "node turn-server.js",
-
-    "build:exe": "pkg . --targets node18-win-x64 --output LocalScreenCast.exe"
+    "build:exe": "pkg . --targets node18-win-x64 --output dist/LocalScreenCast.exe"
   },
 
   "dependencies": {
@@ -26,18 +25,6 @@
   "devDependencies": {
     "concurrently": "^9.2.1",
     "pkg": "^5.8.1"
-  },
-
-  "pkg": {
-    "scripts": [
-      "server.js",
-      "turn-server.js",
-      "index.js"
-    ],
-    "targets": [
-      "node18-win-x64"
-    ],
-    "outputPath": "dist"
   },
 
   "license": "MIT"
