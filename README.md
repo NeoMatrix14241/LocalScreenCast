@@ -12,7 +12,7 @@ A simple, browser-based screen sharing solution that allows one PC to stream its
 ## Building
 ```bash
 npm install
-npm run build:exe
+npm run build
 ```
 The build will generate here:
 /dist/LocalScreenCast.exe
@@ -179,4 +179,5 @@ For issues or questions:
 ---
 
 **Made for simple, easy screen sharing over local networks.** 🚀
+
 
