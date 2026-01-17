@@ -25,6 +25,18 @@ if (fs.existsSync(keyPath) && fs.existsSync(certPath)) {
   console.log('⚠️  No certificates found. Using HTTP (getDisplayMedia may not work)');
 }
 
+function getLocalIP() {
+  const nets = os.networkInterfaces();
+
+  for (const name of Object.keys(nets)) {
+    for (const net of nets[name]) {
+      if (net.family === 'IPv4' && !net.internal) {
+        return net.address;
+      }
+    }
+  }
+}
+
 function startListening() {
   const wss = new WebSocket.Server({ server });
 
@@ -57,7 +69,7 @@ function startListening() {
     ws.on('message', (message) => {
       try {
         const data = JSON.parse(message);
-        
+
         if (data.type === 'join') {
           // PC1 (broadcaster) or PC2 (viewer) joins a room
           const roomId = data.roomId;
@@ -77,7 +89,7 @@ function startListening() {
             room.viewers.push({ ws, id: data.clientId });
             console.log(`Viewer joined room: ${roomId}`);
             ws.send(JSON.stringify({ type: 'joined', role: 'viewer' }));
-            
+
             // Notify broadcaster that a viewer connected
             if (room.broadcaster) {
               room.broadcaster.ws.send(JSON.stringify({
@@ -118,7 +130,7 @@ function startListening() {
 
     ws.on('close', () => {
       console.log('Client disconnected');
-      
+
       // Clean up rooms
       for (const [roomId, room] of rooms) {
         if (room.broadcaster && room.broadcaster.ws === ws) {
@@ -137,7 +149,7 @@ function startListening() {
             }));
           }
         }
-        
+
         if (!room.broadcaster && room.viewers.length === 0) {
           rooms.delete(roomId);
         }
@@ -153,7 +165,7 @@ function startListening() {
   server.listen(PORT, '0.0.0.0', () => {
     const interfaces = os.networkInterfaces();
     let ipAddress = 'localhost';
-    
+
     for (const name of Object.keys(interfaces)) {
       for (const iface of interfaces[name]) {
         if (iface.family === 'IPv4' && !iface.internal) {
@@ -163,15 +175,17 @@ function startListening() {
       }
     }
 
+    const localipv4 = getLocalIP();
+
     console.log('\n====================================');
     console.log('✓ Screen Mirror Server Running');
     console.log('====================================');
     console.log(`Port: ${PORT}`);
-    console.log(`Local: https://localhost:${PORT}`);
-    console.log(`Network: https://${ipAddress}:${PORT}`);
+    console.log(`Local 1: https://localhost:${PORT}`);
+    console.log(`Local 2: https://${ipAddress}:${PORT}`);
     console.log('');
-    console.log('PC1 (Broadcaster): https://localhost:3000/broadcaster.html');
-    console.log('PC2 (Viewer):      https://192.168.160.48:3000/viewer.html');
+    console.log(`PC1 (Broadcaster): https://${localipv4}:${PORT}/broadcaster.html`);
+    console.log(`PC2 (Viewer):      https://${localipv4}:${PORT}/viewer.html`);
     console.log('');
     console.log('PC1 (Broadcaster): /broadcaster.html');
     console.log('PC2 (Viewer):      /viewer.html');

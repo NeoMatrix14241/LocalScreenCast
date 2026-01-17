@@ -1,6 +1,6 @@
 {
-  "name": "pc-mirroring-server",
-  "version": "1.0.0",
+  "name": "localscreencast",
+  "version": "0.1.0",
   "description": "PC-to-PC screen mirroring over LAN/WiFi with audio",
   "main": "server.js",
   "bin": "index.js",
@@ -11,7 +11,8 @@
     "dev": "concurrently \"node server.js\" \"node turn-server.js\"",
     "server": "node server.js",
     "turn": "node turn-server.js",
-    "build": "pkg . --targets node18-win-x64 --output dist/LocalScreenCast.exe"
+    "build": "pkg . --targets node18-win-x64 --output dist/LocalScreenCast/LocalScreenCast.exe",
+    "postbuild": "cpx \"public/**/*\" dist/LocalScreenCast/public && cpx \"LICENSE\" dist/LocalScreenCast && cpx \"README.md\" dist/LocalScreenCast"
   },
 
   "dependencies": {
@@ -24,7 +25,8 @@
 
   "devDependencies": {
     "concurrently": "^9.2.1",
-    "pkg": "^5.8.1"
+    "pkg": "^5.8.1",
+    "cpx": "^1.5.0"
   },
 
   "license": "MIT"

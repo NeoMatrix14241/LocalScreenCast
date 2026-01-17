@@ -1,16 +1,50 @@
-const { spawn } = require("child_process");
+// kill ports first (optional, cross-platform)
+const { execSync } = require("child_process");
+const os = require("os");
 
-function run(file) {
-  const child = spawn("node", [file], { stdio: "inherit" });
+function getPidsByPort(port) {
+  const platform = os.platform();
+  let cmd;
 
-  child.on("exit", (code) => {
-    console.log(`${file} exited with code ${code}`);
-  });
+  if (platform === "win32") {
+    cmd = `netstat -ano | findstr :${port}`;
+  } else {
+    cmd = `lsof -i :${port} -t`;
+  }
 
-  child.on("error", (err) => {
-    console.error(`${file} failed to start`, err);
-  });
+  try {
+    const output = execSync(cmd, { stdio: ["pipe", "pipe", "ignore"] })
+      .toString()
+      .trim();
+
+    if (!output) return [];
+
+    return output.split("\n").map(line => {
+      if (platform === "win32") return line.trim().split(/\s+/).pop();
+      return line.trim();
+    });
+  } catch {
+    return [];
+  }
 }
 
-run("server.js");
-run("turn-server.js");
+function killPort(port) {
+  const pids = getPidsByPort(port);
+  for (const pid of pids) {
+    try {
+      if (os.platform() === "win32") {
+        execSync(`taskkill /PID ${pid} /F`);
+      } else {
+        process.kill(pid, "SIGTERM");
+      }
+    } catch {}
+  }
+}
+
+// optional: stop old servers
+killPort(3000);
+killPort(3487);
+
+// start both servers
+require("./server.js");
+require("./turn-server.js");
