@@ -97,7 +97,8 @@ npm start
                       Relay via Local
                         TURN Server
 
-    If P2P Failed and can't reach the other PC through LAN, a local TURN Server will be used to forward stream via UDP.
+    If P2P Failed and can't reach the other PC through LAN,
+    a local TURN Server will be used to forward stream via UDP.
 
 ### PC1 (Broadcaster) - Sharing Screen
 
@@ -178,3 +179,4 @@ For issues or questions:
 ---
 
 **Made for simple, easy screen sharing over local networks.** 🚀
+
