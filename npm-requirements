@@ -1,4 +1,0 @@
-npm install ws
-npm install werift
-npm install node-turn
-npm install --save-dev concurrently
