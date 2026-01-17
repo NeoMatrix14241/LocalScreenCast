@@ -1,0 +1,41 @@
+sudo apt-get update -y
+sudo apt-get upgrade -y
+sudo apt-get install coturn -y
+sudo systemctl enable coturn
+
+=======================================
+
+sudo cp /mnt/c/Users/kyle.capistrano/Desktop/screencast/turnserver.conf /etc/turnserver.conf
+sudo turnserver -c /etc/turnserver.conf
+
+=======================================
+
+sudo nano /etc/config.conf
+
+
+listening-ip=0.0.0.0
+listening-port=3478
+relay-ip=192.168.160.48
+external-ip=192.168.160.48
+no-udp
+tcp-proxy-port=3478
+min-port=3479
+max-port=3489
+lt-cred-mech
+user=username:password123
+realm=myturn
+verbose
+fingerprint
+no-multicast-peers
+cert=turn-server-cert.pem
+pkey=turn-server-pkey.pem
+no-cli
+no-stun
+no-dtls
+no-tls
+
+sudo cp /mnt/c/Users/kyle.capistrano/Desktop/screencast/turn-server-cert.pem /etc/
+sudo cp /mnt/c/Users/kyle.capistrano/Desktop/screencast/turn-server-pkey.pem /etc/
+
+sudo systemctl stop coturn
+sudo turnserver -c /etc/config.conf

@@ -18,9 +18,6 @@ const server = new Turn({
     credentials: {
         "username": "password123"
     },
-    
-    enableTCP: true,
-    enableTLS: false,
 
     // Realm
     realm: 'myturn',
