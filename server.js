@@ -5,12 +5,33 @@ const cors = require('cors');
 const path = require('path');
 const os = require('os');
 const fs = require('fs');
-
+const { execSync } = require("child_process");
 const app = express();
 
 // Load certificate
-const keyPath = path.join(__dirname, 'key.pem');
-const certPath = path.join(__dirname, 'cert.pem');
+const isBuilt = !!process.pkg;
+
+// Dev vs Build folder
+const exeDir = isBuilt ? path.dirname(process.execPath) : __dirname;
+
+const keyPath = path.join(exeDir, "key.pem");
+const certPath = path.join(exeDir, "cert.pem");
+
+// Batch file only exists in built version
+const certBat = path.join(exeDir, "certgen", "gen_cert.bat");
+
+function generateCerts() {
+  console.log("🔒 Certs missing — generating now...");
+
+  execSync(`"${certBat}"`, { stdio: "inherit" });
+
+  console.log("✅ Certs generated.");
+}
+
+// In build mode, generate if missing
+if (!fs.existsSync(keyPath) || !fs.existsSync(certPath)) {
+  generateCerts();
+}
 
 let server;
 if (fs.existsSync(keyPath) && fs.existsSync(certPath)) {

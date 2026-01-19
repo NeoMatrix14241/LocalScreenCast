@@ -12,7 +12,7 @@
     "server": "node server.js",
     "turn": "node turn-server.js",
     "build": "pkg . --targets node18-win-x64 --output dist/LocalScreenCast/LocalScreenCast.exe",
-    "postbuild": "cpx \"public/**/*\" dist/LocalScreenCast/public && cpx \"LICENSE\" dist/LocalScreenCast && cpx \"README.md\" dist/LocalScreenCast"
+    "postbuild": "cpx \"public/**/*\" dist/LocalScreenCast/public && cpx \"LICENSE\" dist/LocalScreenCast && cpx \"README.md\" dist/LocalScreenCast && cpx \"certgen/**/*\" dist/LocalScreenCast/certgen"
   },
 
   "dependencies": {
