@@ -229,52 +229,8 @@ async function createPeerConnection(viewerId) {
     try {
         console.log('🔌 Creating peer connection for viewer:', viewerId);
 
-        /**
-        const pc = new RTCPeerConnection({
-            iceServers: [
-                { urls: ['stun:stun.l.google.com:19302'] },
-                { urls: ['stun:stun1.l.google.com:19302'] },
-                { urls: ['stun:stun2.l.google.com:19302'] },
-                { urls: ['stun:stun3.l.google.com:19302'] },
-                { urls: ['stun:stun4.l.google.com:19302'] },
-                { urls: ['stun:stun.stunprotocol.org:3478'] },
-                // Public TURN servers for cross-network fallback
-                { 
-                    urls: ['turn:openrelay.metered.ca:80'],
-                    username: 'openrelayproject',
-                    credential: 'openrelayproject'
-                },
-                { 
-                    urls: ['turn:openrelay.metered.ca:443'],
-                    username: 'openrelayproject',
-                    credential: 'openrelayproject'
-                }
-            ],
-            iceCandidatePoolSize: 10,
-            bundlePolicy: 'max-bundle',
-            rtcpMuxPolicy: 'require'
-        });
-        **/
-
-        /** TURN-only configuration for testing
-         const pc = new RTCPeerConnection({
-             iceServers: [
-                 {
-                     urls: [
-                         'turn:openrelay.metered.ca:80',
-                         'turn:openrelay.metered.ca:443',
-                         'turn:openrelay.metered.ca:443?transport=tcp'
-                     ],
-                     username: 'openrelayproject',
-                     credential: 'openrelayproject'
-                 }
-             ],
-             iceTransportPolicy: 'relay'  // ← Forces TURN only
-         });
-         **/
-
-        // Get your TURN server IP (same machine or another on LAN)
-        const TURN_SERVER_IP = '192.168.160.48';  // ← Your TURN server IP
+        // TURN server IP (same machine or another on LAN)
+        const TURN_SERVER_IP = window.location.hostname;
 
         const pc = new RTCPeerConnection({
             iceServers: [
