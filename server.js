@@ -8,16 +8,11 @@ const fs = require('fs');
 const { execSync } = require("child_process");
 const app = express();
 
-// Load certificate
+// Generate and Load certificate
 const isBuilt = !!process.pkg;
-
-// Dev vs Build folder
 const exeDir = isBuilt ? path.dirname(process.execPath) : __dirname;
-
 const keyPath = path.join(exeDir, "key.pem");
 const certPath = path.join(exeDir, "cert.pem");
-
-// Batch file only exists in built version
 const certBat = path.join(exeDir, "certgen", "gen_cert.bat");
 
 function generateCerts() {
@@ -28,7 +23,6 @@ function generateCerts() {
   console.log("✅ Certs generated.");
 }
 
-// In build mode, generate if missing
 if (!fs.existsSync(keyPath) || !fs.existsSync(certPath)) {
   generateCerts();
 }
@@ -46,6 +40,7 @@ if (fs.existsSync(keyPath) && fs.existsSync(certPath)) {
   console.log('⚠️  No certificates found. Using HTTP (getDisplayMedia may not work)');
 }
 
+// Get local IPv4 address
 function getLocalIP() {
   const nets = os.networkInterfaces();
 
