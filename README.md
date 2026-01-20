@@ -135,7 +135,6 @@ Find your PC's IP:
 - **Windows (PowerShell):** `ipconfig` → Look for IPv4 Address
 - **Mac/Linux (Terminal):** `ifconfig` or `hostname -I`
 
-
 ## Troubleshooting
 
 ### Can't connect from another PC
@@ -179,5 +178,3 @@ For issues or questions:
 ---
 
 **Made for simple, easy screen sharing over local networks.** 🚀
-
-
