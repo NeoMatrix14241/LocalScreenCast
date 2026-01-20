@@ -31,7 +31,7 @@ mkcert -install
 mkcert -key-file key.pem -cert-file cert.pem <Your IPv4> localhost
 ```
 
-### Step 2: Firewall Configuration
+### Step 3: Firewall Configuration
 Open the UDP port range (**49152–65535**) to allow streaming.
 
 #### Windows (Run Command Prompt as Administrator)
@@ -55,12 +55,12 @@ sudo firewall-cmd --reload
 sudo iptables -A INPUT -p udp --dport 49152:65535 -j ACCEPT
 ```
 
-### Step 3: Install Dependencies
+### Step 4: Install Dependencies
 ```bash
 npm install
 ```
 
-### Step 4: Start the Server
+### Step 5: Start the Server
 
 ```bash
 npm start
