@@ -5,7 +5,6 @@
   "main": "server.js",
   "bin": "index.js",
   "type": "commonjs",
-
   "scripts": {
     "start": "concurrently \"node server.js\" \"node turn-server.js\"",
     "dev": "concurrently \"node server.js\" \"node turn-server.js\"",
@@ -14,7 +13,6 @@
     "build": "pkg . --targets node18-win-x64 --output dist/LocalScreenCast/LocalScreenCast.exe",
     "postbuild": "cpx \"public/**/*\" dist/LocalScreenCast/public && cpx \"LICENSE\" dist/LocalScreenCast && cpx \"README.md\" dist/LocalScreenCast && cpx \"certgen/**/*\" dist/LocalScreenCast/certgen"
   },
-
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^4.22.1",
@@ -22,12 +20,10 @@
     "werift": "^0.22.2",
     "ws": "^8.19.0"
   },
-
   "devDependencies": {
     "concurrently": "^9.2.1",
-    "pkg": "^5.8.1",
-    "cpx": "^1.5.0"
+    "cpx": "^1.5.0",
+    "pkg": "^5.8.1"
   },
-
   "license": "MIT"
 }
