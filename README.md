@@ -2,6 +2,9 @@
 
 A simple, browser-based screen sharing solution that allows one PC to stream its screen and audio to another PC over a local network. Works exactly like Teams screen sharing (without the remote control).
 
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/7e163620-7e38-4378-9309-bc71edf9353f" />
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/7f8984b3-1fae-4078-890c-b3264519ecc1" />
+
 ## Requirements
 
 - **Node.js** (v24 LTS) - [Download](https://nodejs.org/)
@@ -178,3 +181,4 @@ For issues or questions:
 ---
 
 **Made for simple, easy screen sharing over local networks.** 🚀
+
