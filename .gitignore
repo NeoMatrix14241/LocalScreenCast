@@ -1,7 +1,7 @@
 node_modules/
+android/
 dist/
 *.pem
 .DS_Store
 Thumbs.db
 *.exe
-android/
