@@ -14,8 +14,14 @@ A simple, browser-based screen sharing solution that allows one PC to stream its
 
 ## Building
 ```bash
-npm install
-npm run build
+# With coturn precompiled windows binary (recommended):
+npm run build:coturn
+
+# With Node-Turn (Node.js library):
+npm run build:nodejs
+
+# Build both with Coturn and Node-Turn
+npm run build:nodeturn && npm run build:coturn
 ```
 The build will generate here:
 /dist/LocalScreenCast.exe
