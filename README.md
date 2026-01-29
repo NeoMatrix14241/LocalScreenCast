@@ -66,7 +66,11 @@ npm install
 ### Step 5: Start the Server
 
 ```bash
-npm start
+# With coturn precompiled windows binary (recommended):
+npm run start:coturn
+
+# With Node-Turn (Node.js library):
+npm run start:nodejs
 ```
 
 ## Usage

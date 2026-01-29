@@ -3,15 +3,19 @@
   "version": "0.1.0",
   "description": "PC-to-PC screen mirroring over LAN/WiFi with audio",
   "main": "server.js",
-  "bin": "index.js",
+  "bin": "index-nodeturn.js",
   "type": "commonjs",
   "scripts": {
-    "start": "concurrently \"node server.js\" \"node turn-server.js\"",
+    "start": "npm run start:nodeturn",
+    "start:coturn": "concurrently \"node server.js\" \"start /wait coturn\\bin\\turnserver.exe\"",
+    "start:nodeturn": "concurrently \"node server.js\" \"node turn-server.js\"",
     "dev": "concurrently \"node server.js\" \"node turn-server.js\"",
     "server": "node server.js",
     "turn": "node turn-server.js",
-    "build": "pkg . --targets node18-win-x64 --output dist/LocalScreenCast/LocalScreenCast.exe",
-    "postbuild": "cpx \"public/**/*\" dist/LocalScreenCast/public && cpx \"LICENSE\" dist/LocalScreenCast && cpx \"README.md\" dist/LocalScreenCast && cpx \"certgen/**/*\" dist/LocalScreenCast/certgen"
+    "build:coturn": "node -e \"const pkg=require('./package.json');pkg.bin='index-coturn.js';require('fs').writeFileSync('./package.json',JSON.stringify(pkg,null,2))\" && pkg . --targets node18-win-x64 --output dist/LocalScreenCast-Coturn/LocalScreenCast.exe && node -e \"const pkg=require('./package.json');pkg.bin='index-nodeturn.js';require('fs').writeFileSync('./package.json',JSON.stringify(pkg,null,2))\" && npm run postbuild:coturn",
+    "build:nodeturn": "pkg . --targets node18-win-x64 --output dist/LocalScreenCast-NodeTurn/LocalScreenCast.exe && npm run postbuild:nodeturn",
+    "postbuild:coturn": "cpx \"public/**/*\" dist/LocalScreenCast-Coturn/public && cpx \"LICENSE\" dist/LocalScreenCast-Coturn && cpx \"README.md\" dist/LocalScreenCast-Coturn && cpx \"certgen/**/*\" dist/LocalScreenCast-Coturn/certgen && cpx \"coturn/**/*\" dist/LocalScreenCast-Coturn/coturn",
+    "postbuild:nodeturn": "cpx \"public/**/*\" dist/LocalScreenCast-NodeTurn/public && cpx \"LICENSE\" dist/LocalScreenCast-NodeTurn && cpx \"README.md\" dist/LocalScreenCast-NodeTurn && cpx \"certgen/**/*\" dist/LocalScreenCast-NodeTurn/certgen"
   },
   "dependencies": {
     "cors": "^2.8.5",

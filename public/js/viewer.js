@@ -158,27 +158,17 @@ async function handleOffer(offer) {
 }
 
 function createPeerConnection() {
+    const TURN_SERVER_IP = window.location.hostname;
     console.log('🔌 Creating RTCPeerConnection...');
     peerConnection = new RTCPeerConnection({
         iceServers: [
-            { urls: ['stun:stun.l.google.com:19302'] },
-            { urls: ['stun:stun1.l.google.com:19302'] },
-            { urls: ['stun:stun2.l.google.com:19302'] },
-            { urls: ['stun:stun3.l.google.com:19302'] },
-            { urls: ['stun:stun4.l.google.com:19302'] },
-            { urls: ['stun:stun.stunprotocol.org:3478'] },
-            // Public TURN servers for cross-network fallback
             {
-                urls: ['turn:openrelay.metered.ca:80'],
-                username: 'openrelayproject',
-                credential: 'openrelayproject'
-            },
-            {
-                urls: ['turn:openrelay.metered.ca:443'],
-                username: 'openrelayproject',
-                credential: 'openrelayproject'
+                urls: `turn:${TURN_SERVER_IP}:3478`,
+                username: 'username',
+                credential: 'password123'
             }
-        ]
+        ],
+        iceTransportPolicy: "all"
     });
 
     let streamAttached = false;

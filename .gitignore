@@ -5,3 +5,5 @@ dist/
 .DS_Store
 Thumbs.db
 *.exe
+coturn/var/log/*
+!coturn/var/log/.gitkeep
