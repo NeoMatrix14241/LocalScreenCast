@@ -152,7 +152,7 @@ Find your PC's IP:
 
 ### Can't connect from another PC
 - Ensure both PCs are on same network (WiFi/LAN)
-- Check firewall isn't blocking UDP Port 49152-65535
+- Check firewall isn't blocking UDP Port 49152-65535, create new rule then allow UDP 49152-65535 Ports
 
 ### No audio
 - Grant microphone permission in browser
@@ -162,6 +162,7 @@ Find your PC's IP:
 ### Screen won't share
 - Grant screen capture permission when prompted
 - Close other screen-sharing apps that might conflict
+- Allow UDP Port range 49152-65535
 
 ### Laggy/Stuttering
 - Check network connection quality
