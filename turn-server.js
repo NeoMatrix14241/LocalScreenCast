@@ -1,20 +1,5 @@
 const os = require('os');
 
-function getLocalIP() {
-  const nets = os.networkInterfaces();
-
-  for (const name of Object.keys(nets)) {
-    for (const net of nets[name]) {
-      if (net.family === 'IPv4' && !net.internal) {
-        return net.address;
-      }
-    }
-  }
-  return '0.0.0.0';
-}
-
-const localipv4 = getLocalIP();
-
 const Turn = require('node-turn');
 
 const server = new Turn({
@@ -23,8 +8,8 @@ const server = new Turn({
   listeningIps: ['0.0.0.0'],
 
   // Relay settings
-  relayIps: [localipv4],
-  externalIps: [localipv4],
+  relayIps: ['0.0.0.0'],
+  externalIps: ['0.0.0.0'],
 
   // Min/Max ports for relay
   minPort: 49152,
