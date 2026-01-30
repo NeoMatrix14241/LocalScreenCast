@@ -12,10 +12,10 @@
     "dev": "concurrently \"node server.js\" \"node turn-server.js\"",
     "server": "node server.js",
     "turn": "node turn-server.js",
-    "build:coturn": "node -e \"const pkg=require('./package.json');pkg.bin='index-coturn.js';require('fs').writeFileSync('./package.json',JSON.stringify(pkg,null,2))\" && pkg . --targets node18-win-x64 --output dist/LocalScreenCast-Coturn/LocalScreenCast.exe && node -e \"const pkg=require('./package.json');pkg.bin='index-nodeturn.js';require('fs').writeFileSync('./package.json',JSON.stringify(pkg,null,2))\" && npm run postbuild:coturn",
-    "build:nodeturn": "pkg . --targets node18-win-x64 --output dist/LocalScreenCast-NodeTurn/LocalScreenCast.exe && npm run postbuild:nodeturn",
-    "postbuild:coturn": "cpx \"public/**/*\" dist/LocalScreenCast-Coturn/public && cpx \"LICENSE\" dist/LocalScreenCast-Coturn && cpx \"README.md\" dist/LocalScreenCast-Coturn && cpx \"certgen/**/*\" dist/LocalScreenCast-Coturn/certgen && cpx \"coturn/**/*\" dist/LocalScreenCast-Coturn/coturn",
-    "postbuild:nodeturn": "cpx \"public/**/*\" dist/LocalScreenCast-NodeTurn/public && cpx \"LICENSE\" dist/LocalScreenCast-NodeTurn && cpx \"README.md\" dist/LocalScreenCast-NodeTurn && cpx \"certgen/**/*\" dist/LocalScreenCast-NodeTurn/certgen"
+    "build:coturn": "node -e \"const pkg=require('./package.json');pkg.bin='index-coturn.js';require('fs').writeFileSync('./package.json',JSON.stringify(pkg,null,2))\" && pkg . --targets node18-win-x64 --output dist/LocalScreenCast-Server-Coturn/LocalScreenCast.exe && node -e \"const pkg=require('./package.json');pkg.bin='index-nodeturn.js';require('fs').writeFileSync('./package.json',JSON.stringify(pkg,null,2))\" && npm run postbuild:coturn",
+    "build:nodeturn": "pkg . --targets node18-win-x64 --output dist/LocalScreenCast-Server-NodeTurn/LocalScreenCast.exe && npm run postbuild:nodeturn",
+    "postbuild:coturn": "cpx \"public/**/*\" dist/LocalScreenCast-Server-Coturn/public && cpx \"LICENSE\" dist/LocalScreenCast-Server-Coturn && cpx \"README.md\" dist/LocalScreenCast-Server-Coturn && cpx \"certgen/**/*\" dist/LocalScreenCast-Server-Coturn/certgen && cpx \"coturn/**/*\" dist/LocalScreenCast-Server-Coturn/coturn",
+    "postbuild:nodeturn": "cpx \"public/**/*\" dist/LocalScreenCast-Server-NodeTurn/public && cpx \"LICENSE\" dist/LocalScreenCast-Server-NodeTurn && cpx \"README.md\" dist/LocalScreenCast-Server-NodeTurn && cpx \"certgen/**/*\" dist/LocalScreenCast-Server-NodeTurn/certgen"
   },
   "dependencies": {
     "cors": "^2.8.5",
