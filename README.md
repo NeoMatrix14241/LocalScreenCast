@@ -40,7 +40,7 @@ mkcert -install
 mkcert -key-file key.pem -cert-file cert.pem <Your IPv4> localhost
 ```
 
-### Step 3: Firewall Configuration
+### Step 3: Firewall Configuration (For Broadcaster - No need to unblock for server)
 Open the UDP port range (**49152–65535**) to allow streaming.
 
 #### Windows (Run Command Prompt as Administrator)
@@ -115,13 +115,14 @@ npm run start:nodejs
 
 ### PC1 (Broadcaster) - Sharing Screen
 
-1. On PC1, open browser and go to: `http://<IPv4>:3000/broadcaster.html`
-2. You'll see a random Room ID generated (e.g., `room-abc123def`)
-3. Click **"Start Broadcasting"**
-4. Grant browser permissions for:
+1. Allow dynamic UDP Port range: 49152-65535 in your firewall (Refer to Installation & Setup)
+2. On PC1, open browser and go to: `http://<IPv4>:3000/broadcaster.html`
+3. You'll see a random Room ID generated (e.g., `room-abc123def`)
+4. Click **"Start Broadcasting"**
+5. Grant browser permissions for:
    - Screen capture
    - Audio capture (microphone)
-5. Share the Room ID or link with PC2
+6. Share the Room ID or link with PC2
 
 ### PC2 (Viewer) - Watching Screen
 
